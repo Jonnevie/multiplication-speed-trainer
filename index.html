@@ -31,12 +31,15 @@
         radial-gradient(900px 700px at 80% 20%, rgba(99,243,165,.12), transparent 55%),
         radial-gradient(900px 700px at 40% 90%, rgba(255,107,138,.10), transparent 60%),
         var(--bg);
-      min-height:100vh;
+min-height: 100svh;   /* mobile-safe viewport height */
+min-height: 100dvh;   /* fallback for browsers that support dvh but not svh */
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:18px;
-    }
+  padding-left: 18px;
+  padding-right: 18px;
+  padding-top: calc(18px + env(safe-area-inset-top));
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));    }
 
     /* prevent background scroll when a modal is open */
     body.modalOpen{
