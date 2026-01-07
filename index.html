@@ -528,7 +528,7 @@ min-height: 100dvh;   /* fallback for browsers that support dvh but not svh */
       background: linear-gradient(180deg, rgba(18,26,51,.98), rgba(10,14,30,.98));
       box-shadow:var(--shadow);
       overflow:hidden;
-      max-height: calc(100vh - 36px);
+      max-height: calc(100svh - 36px);
       display:flex;
       flex-direction:column;
     }
@@ -602,7 +602,7 @@ min-height: 100dvh;   /* fallback for browsers that support dvh but not svh */
     @media (max-width: 520px){
       body{padding:10px}
       .modalOverlay{align-items:flex-end;padding:10px}
-      .modal{width:100%;max-height: calc(100vh - 20px)}
+      .modal{width:100%;max-height: calc(100svh - 20px)}
       .modalHd{padding:12px}
       .modalBd{padding:12px}
       .modalHd > div{flex-wrap:wrap}
