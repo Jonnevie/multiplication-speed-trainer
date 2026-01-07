@@ -1,0 +1,2034 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Times Tables Speed Trainer</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --text:#f3f5ff;
+      --muted:#b8c0ff;
+      --accent:#8ef0ff;
+      --good:#63f3a5;
+      --bad:#ff6b8a;
+      --warn:#ffd36a;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --ui: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--ui);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(142,240,255,.15), transparent 60%),
+        radial-gradient(900px 700px at 80% 20%, rgba(99,243,165,.12), transparent 55%),
+        radial-gradient(900px 700px at 40% 90%, rgba(255,107,138,.10), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    /* prevent background scroll when a modal is open */
+    body.modalOpen{
+      overflow:hidden;
+      touch-action:none;
+    }
+
+    .wrap{width:min(980px, 100%);}
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:visible;
+    }
+
+    .hd{
+      padding:16px 18px;
+      background: rgba(255,255,255,.03);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      overflow:visible;
+    }
+    .title{display:flex;flex-direction:column;gap:6px;min-width:0}
+    h1{font-size:18px;margin:0;letter-spacing:.2px}
+
+    .topMode{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      min-width:0;
+    }
+    .modeChipTop{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .modeChipTop b{color:var(--text)}
+    .modeLine{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: min(560px, 68vw);
+    }
+    .modeLine b{color:var(--text)}
+
+    .pill{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .hdRight{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .iconBtn{
+      border:none;
+      cursor:pointer;
+      width:36px;height:36px;
+      border-radius:14px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      display:grid;
+      place-items:center;
+      font-size:16px;
+    }
+    .bd{padding:18px}
+
+    /* GAME */
+    .big{
+      display:grid;
+      gap:12px;
+      text-align:center;
+      padding:22px 18px 18px;
+    }
+
+    /* Equation + input inline */
+    .equationRow{
+      display:flex;
+      align-items:baseline;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .equationText{
+      font-size:44px;
+      font-weight:950;
+      letter-spacing:.5px;
+      line-height:1.1;
+      margin:0;
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .equationText .x{color:var(--muted); font-weight:850}
+
+    input.answer{
+      font-size:28px;
+      font-weight:950;
+      width:150px;
+      text-align:center;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color:var(--text);
+      outline:none;
+      font-family:var(--mono);
+      transform: translateY(-2px);
+    }
+    @media (max-width: 420px){
+      input.answer{width:130px;font-size:26px}
+      .equationText{font-size:40px}
+    }
+
+    .btnRow{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      margin-top:6px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      cursor:pointer;
+      border:none;
+      border-radius:14px;
+      padding:12px 18px;
+      font-weight:900;
+      letter-spacing:.3px;
+      color:#07101f;
+      background: linear-gradient(135deg, var(--accent), #b0ffcf);
+      box-shadow: 0 10px 24px rgba(142,240,255,.16);
+      position:relative;
+      overflow:hidden;
+      isolation:isolate;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .btn > span{position:relative; z-index:1;}
+
+    /* Gentle pulse for START button */
+    @keyframes startPulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow:
+          0 10px 24px rgba(142,240,255,.16),
+          0 0 0 0 rgba(142,240,255,.45);
+      }
+      50% {
+        transform: scale(1.035);
+        box-shadow:
+          0 14px 32px rgba(142,240,255,.28),
+          0 0 0 8px rgba(142,240,255,0);
+      }
+    }
+    .btn.pulse { animation: startPulse 1.8s ease-in-out infinite; }
+    .btn.stop { animation: none !important; }
+
+    /* moving sparkle */
+    .btn.sparkle::before{
+      content:"";
+      position:absolute;
+      inset:-60%;
+      background:
+        linear-gradient(120deg,
+          rgba(255,255,255,0) 0%,
+          rgba(255,255,255,.60) 18%,
+          rgba(255,255,255,0) 36%,
+          rgba(255,255,255,.45) 54%,
+          rgba(255,255,255,0) 72%,
+          rgba(255,255,255,.35) 90%,
+          rgba(255,255,255,0) 100%
+        );
+      transform: translateX(-45%) rotate(18deg);
+      opacity:.55;
+      animation: shimmer 1.4s linear infinite;
+      pointer-events:none;
+      z-index:0;
+      mix-blend-mode: overlay;
+    }
+    .btn.sparkle::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(140px 90px at 15% 25%, rgba(142,240,255,.40), transparent 60%),
+        radial-gradient(170px 110px at 85% 70%, rgba(99,243,165,.30), transparent 65%);
+      opacity:.75;
+      animation: glowPulse 1.25s ease-in-out infinite;
+      pointer-events:none;
+      z-index:0;
+    }
+    @keyframes shimmer{
+      0%   { transform: translateX(-55%) rotate(18deg); }
+      100% { transform: translateX(55%)  rotate(18deg); }
+    }
+    @keyframes glowPulse{
+      0%,100%{ opacity:.55; filter: blur(0px); }
+      50%{ opacity:.95; filter: blur(.4px); }
+    }
+
+    /* STOP styling */
+    .btn.stop{
+      background: rgba(255,107,138,.18);
+      color: var(--text);
+      border:1px solid rgba(255,107,138,.35);
+      box-shadow:none;
+    }
+    .btn.stop::before,
+    .btn.stop::after{ display:none; }
+
+    .hint{font-size:13px;color:var(--muted)}
+    .stats{display:grid;grid-template-columns: repeat(4, 1fr);gap:10px}
+    @media (max-width: 520px){.stats{grid-template-columns: repeat(2, 1fr)}}
+    .stat{
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      text-align:left;
+    }
+    .stat .k{font-size:11px;color:var(--muted)}
+    .stat .v{font-size:18px;font-weight:950;margin-top:2px}
+    .toast{margin-top:10px;font-size:13px;color:var(--muted);min-height:18px}
+
+    /* wrong answer shake + red flash */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      15% { transform: translateX(-10px); }
+      30% { transform: translateX(10px); }
+      45% { transform: translateX(-8px); }
+      60% { transform: translateX(8px); }
+      75% { transform: translateX(-5px); }
+      90% { transform: translateX(5px); }
+    }
+    @keyframes redFlash {
+      0% { opacity:0; }
+      15% { opacity:.85; }
+      100% { opacity:0; }
+    }
+    .gameArea{ position:relative; }
+    .gameArea.shake{ animation: shake .35s ease-in-out; }
+    .flash{
+      position:absolute;
+      inset:-12px;
+      border-radius: 22px;
+      background: radial-gradient(600px 280px at 50% 30%, rgba(255,107,138,.35), rgba(255,107,138,0));
+      opacity:0;
+      pointer-events:none;
+    }
+    .flash.on{ animation: redFlash .45s ease-out; }
+
+    /* 🎤 Mic button */
+    .micBtn{
+      border:none;
+      cursor:pointer;
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:900;
+      letter-spacing:.2px;
+      color:var(--text);
+      background: rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .micBtn:disabled{opacity:.5;cursor:not-allowed}
+    .micDot{
+      width:8px;height:8px;border-radius:999px;
+      background: rgba(255,255,255,.35);
+      box-shadow: 0 0 0 0 rgba(255,107,138,.0);
+    }
+    .micBtn.listening{
+      border-color: rgba(255,107,138,.45);
+      background: rgba(255,107,138,.10);
+    }
+    .micBtn.listening .micDot{
+      background: var(--bad);
+      animation: micPulse 1s ease-in-out infinite;
+    }
+    @keyframes micPulse{
+      0%,100%{ transform: scale(1); box-shadow: 0 0 0 0 rgba(255,107,138,.0); }
+      50%{ transform: scale(1.15); box-shadow: 0 0 0 8px rgba(255,107,138,.0); }
+    }
+
+    /* BOTTOM SECTIONS */
+    .bottom{
+      border-top:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.06);
+      padding:14px 14px 4px;
+      display:grid;
+      gap:10px;
+    }
+    .panel{
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      overflow:visible;
+      position:relative;
+      z-index:1;
+    }
+    .panelHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px;
+      background: rgba(0,0,0,.14);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      cursor:pointer;
+      user-select:none;
+    }
+    .panelTitle{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .panelTitle b{
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .panelTitle span{font-size:11px;color:var(--muted)}
+    .panelActions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+    .panelBody{
+      padding:12px;
+      overflow:visible;
+      position:relative;
+      z-index:2;
+    }
+    .panel.collapsed .panelBody{display:none}
+    .caret{
+      width:28px;height:28px;border-radius:12px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      font-weight:900;
+    }
+
+    /* LOG / LIST */
+    .log{max-height:220px;overflow:auto;padding-right:6px}
+    .logItem{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.16);
+      margin-bottom:8px;
+      font-family:var(--mono);
+      font-size:13px;
+    }
+    .ok{color:var(--good)}
+    .no{color:var(--bad)}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* Badges */
+    .badgeGrid{display:flex;flex-wrap:wrap;gap:8px;overflow:visible; position:relative; z-index:3;}
+    .badge{
+      position:relative;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      font-size:12px;
+      color:var(--text);
+      white-space:nowrap;
+      outline:none;
+      overflow:visible;
+      z-index:4;
+    }
+    .badge .t{color:var(--muted)}
+    .badge.earned{
+      border-color: rgba(99,243,165,.35);
+      background: rgba(99,243,165,.08);
+    }
+    .badge.temp{
+      border-color: rgba(142,240,255,.40);
+      background: rgba(142,240,255,.08);
+    }
+
+    .badge[data-tip]:hover::after,
+    .badge[data-tip]:focus::after{
+      content: attr(data-tip);
+      position:absolute;
+      left:50%;
+      bottom: calc(100% + 10px);
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.90);
+      border:1px solid rgba(255,255,255,.14);
+      color: var(--text);
+      padding:8px 10px;
+      border-radius:12px;
+      font-size:12px;
+      max-width:260px;
+      width:max-content;
+      white-space:normal;
+      box-shadow: var(--shadow);
+      z-index:9999;
+      pointer-events:none;
+    }
+    .badge[data-tip]:hover::before,
+    .badge[data-tip]:focus::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom: calc(100% + 4px);
+      transform: translateX(-50%);
+      border:6px solid transparent;
+      border-top-color: rgba(0,0,0,.90);
+      z-index:10000;
+      pointer-events:none;
+    }
+
+    /* Confetti */
+    .confetti{pointer-events:none;position:fixed;inset:0;overflow:hidden; z-index:9998}
+    .confetti i{
+      position:absolute;
+      width:10px; height:16px;
+      opacity:.9;
+      transform: translateY(-20px);
+      border-radius:2px;
+      animation: fall 1.2s linear forwards;
+    }
+    @keyframes fall{
+      to{transform: translateY(110vh) rotate(340deg);opacity:0}
+    }
+
+    /* MODAL */
+    .modalOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:20000;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    .modalOverlay.open{display:flex}
+
+    .modal{
+      width:min(720px, 100%);
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(18,26,51,.98), rgba(10,14,30,.98));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      max-height: calc(100vh - 36px);
+      display:flex;
+      flex-direction:column;
+    }
+    .modalHd{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      position:sticky;
+      top:0;
+      z-index:2;
+    }
+    .modalHd b{font-size:14px}
+    .modalBd{
+      padding:16px;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .grid2{display:grid;grid-template-columns: 1fr 1fr;gap:12px}
+    .grid3{display:grid;grid-template-columns: 1fr 1fr 1fr;gap:12px}
+    @media (max-width: 520px){.grid2,.grid3{grid-template-columns:1fr}}
+
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    .field{
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      padding:10px 12px;
+      color:var(--text);
+      outline:none;
+      width:100%;
+    }
+    select.field{padding:10px 10px}
+    .switches{display:flex;gap:10px;flex-wrap:wrap}
+    .toggle{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      user-select:none;
+    }
+    .toggle input{transform:scale(1.1)}
+    .footerNote{
+      font-size:12px;
+      color:rgba(184,192,255,.9);
+      line-height:1.4;
+      margin-top:10px;
+    }
+    .hr{
+      height:1px;
+      background: rgba(255,255,255,.10);
+      margin:14px 0;
+      border:0;
+    }
+    .adminTag{
+      font-size:11px;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+
+    @media (max-width: 520px){
+      body{padding:10px}
+      .modalOverlay{align-items:flex-end;padding:10px}
+      .modal{width:100%;max-height: calc(100vh - 20px)}
+      .modalHd{padding:12px}
+      .modalBd{padding:12px}
+      .modalHd > div{flex-wrap:wrap}
+      .grid2,.grid3{gap:10px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <section class="card">
+      <div class="hd">
+        <div class="title">
+          <h1>Times Tables Speed Trainer</h1>
+          <div class="topMode" aria-live="polite">
+            <span class="modeChipTop">Player: <b id="modePlayerTop">—</b></span>
+            <span class="modeLine">Mode: <b id="modeTextTop">—</b></span>
+          </div>
+        </div>
+
+        <div class="hdRight">
+          <div class="pill" id="modePill">Ready</div>
+          <div class="pill" id="bestPill">Best: —</div>
+          <button class="iconBtn" id="openSettingsBtn" title="Settings" aria-label="Open settings">⚙️</button>
+        </div>
+      </div>
+
+      <div class="bd big gameArea" id="gameArea">
+        <div class="flash" id="flash"></div>
+
+        <!-- equation + input inline -->
+        <div class="equationRow" aria-live="polite">
+          <div class="equationText" id="qText">
+            <span class="x">Press</span> Start
+          </div>
+
+          <!-- only visible while running -->
+          <input class="answer" id="answer" inputmode="numeric" autocomplete="off" placeholder="?" disabled style="display:none" />
+        </div>
+
+        <div class="btnRow">
+          <button class="btn sparkle" id="startBtn"><span>START</span></button>
+          <!-- 🎤 mic button (enabled only during gameplay + supported browsers) -->
+          <button class="micBtn" id="micBtn" disabled title="Speak the answer">
+            <span class="micDot"></span>
+            <span id="micLabel">🎤</span>
+          </button>
+        </div>
+
+        <br>
+
+        <div class="stats">
+          <div class="stat"><div class="k">Time left</div><div class="v" id="timeLeft">—</div></div>
+          <div class="stat"><div class="k">Correct</div><div class="v" id="correct">0</div></div>
+          <div class="stat"><div class="k">Streak</div><div class="v" id="streak">0</div></div>
+          <div class="stat"><div class="k">Accuracy</div><div class="v" id="accuracy">—</div></div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+      </div>
+
+      <div class="bottom">
+        <div class="panel" id="panel_leaderboard">
+          <div class="panelHeader" data-toggle="panel_leaderboard">
+            <div class="panelTitle">
+              <b>Leaderboard</b>
+              <span>Best scores for this mode • <span id="leaderModeText">—</span></span>
+            </div>
+            <div class="panelActions">
+              <div class="pill" id="leaderTopPill">—</div>
+              <div class="caret">▾</div>
+            </div>
+          </div>
+          <div class="panelBody">
+            <div id="leaderboard" class="log"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="panel_badges">
+          <div class="panelHeader" data-toggle="panel_badges">
+            <div class="panelTitle">
+              <b>Badges</b>
+              <span>For <span id="badgePlayerName">—</span> • <span id="badgeModeText">—</span></span>
+            </div>
+            <div class="panelActions">
+              <div class="pill" id="badgePill">—</div>
+              <div class="caret">▾</div>
+            </div>
+          </div>
+          <div class="panelBody">
+            <div id="badges" class="badgeGrid"></div>
+            <div class="footerNote">Hover/tap a badge to see what it means.</div>
+          </div>
+        </div>
+
+        <div class="panel" id="panel_log">
+          <div class="panelHeader" data-toggle="panel_log">
+            <div class="panelTitle">
+              <b>Round Log</b>
+              <span>Latest answers</span>
+            </div>
+            <div class="panelActions">
+              <div class="pill" id="roundScorePill">Score: 0</div>
+              <div class="caret">▾</div>
+            </div>
+          </div>
+          <div class="panelBody">
+            <div class="log" id="log"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modalOverlay" id="settingsOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal">
+      <div class="modalHd">
+        <b id="settingsTitle">Settings</b>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+          <button class="iconBtn" id="adminBtn" title="Admin" aria-label="Admin">🔒</button>
+          <button class="iconBtn" id="closeSettingsBtn" aria-label="Close settings">✕</button>
+        </div>
+      </div>
+      <div class="modalBd">
+        <div class="grid2">
+          <div>
+            <label>Player</label>
+            <select class="field" id="player"></select>
+          </div>
+          <div>
+            <label>Round length</label>
+            <select class="field" id="duration">
+              <option value="60">60 seconds</option>
+              <option value="90">90 seconds</option>
+              <option value="120">120 seconds</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div>
+          <label>Tables (choose a focus)</label>
+          <div class="grid3" id="tablesGrid"></div>
+          <div class="footerNote">Tip: start with 2–3 tables (e.g., 6, 7, 8).</div>
+        </div>
+
+        <div style="height:12px"></div>
+
+       <div class="switches">
+  <label class="toggle" title="Repeats questions you miss more often">
+    <input type="checkbox" id="adaptive" checked />
+    <span><b>Adaptive</b> <span class="small">(more practice on mistakes)</span></span>
+  </label>
+
+  <label class="toggle" title="Includes 0–12 multipliers (otherwise 1–12)">
+    <input type="checkbox" id="includeZero" />
+    <span><b>Include ×0</b></span>
+  </label>
+
+  <label class="toggle" title="Automatically listens for your next answer (hands-free)">
+    <input type="checkbox" id="autoListen" />
+    <span><b>🎤 Auto listen</b> <span class="small">(hands-free mode)</span></span>
+  </label>
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN MODAL -->
+  <div class="modalOverlay" id="adminOverlay" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <div class="modal" style="width:min(760px, 100%);">
+      <div class="modalHd">
+        <div style="display:flex;gap:10px;align-items:center;min-width:0">
+          <b id="adminTitle">Admin</b>
+          <span class="adminTag">Unlocked</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="iconBtn" id="closeAdminBtn" aria-label="Close admin">✕</button>
+        </div>
+      </div>
+      <div class="modalBd" id="adminBody"></div>
+    </div>
+  </div>
+
+  <div class="confetti" id="confetti"></div>
+
+<script>
+(() => {
+  // ---------- DOM ----------
+  const gameArea = document.getElementById('gameArea');
+  const flash = document.getElementById('flash');
+
+  const qText = document.getElementById('qText');
+  const answer = document.getElementById('answer');
+  const startBtn = document.getElementById('startBtn');
+
+  // 🎤
+  const micBtn = document.getElementById('micBtn');
+  const micLabel = document.getElementById('micLabel');
+
+  const playerSel = document.getElementById('player');
+  const durationSel = document.getElementById('duration');
+  const tablesGrid = document.getElementById('tablesGrid');
+  const adaptiveChk = document.getElementById('adaptive');
+  const includeZeroChk = document.getElementById('includeZero');
+  const autoListenChk = document.getElementById('autoListen'); // ✅ NEW
+
+  const timeLeftEl = document.getElementById('timeLeft');
+  const correctEl = document.getElementById('correct');
+  const streakEl = document.getElementById('streak');
+  const accuracyEl = document.getElementById('accuracy');
+  const toast = document.getElementById('toast');
+
+  const modePill = document.getElementById('modePill');
+  const bestPill = document.getElementById('bestPill');
+
+  const modePlayerTop = document.getElementById('modePlayerTop');
+  const modeTextTop = document.getElementById('modeTextTop');
+
+  const leaderModeText = document.getElementById('leaderModeText');
+  const leaderTopPill = document.getElementById('leaderTopPill');
+  const leaderboardEl = document.getElementById('leaderboard');
+
+  const badgesEl = document.getElementById('badges');
+  const badgePlayerName = document.getElementById('badgePlayerName');
+  const badgeModeText = document.getElementById('badgeModeText');
+  const badgePill = document.getElementById('badgePill');
+
+  const log = document.getElementById('log');
+  const roundScorePill = document.getElementById('roundScorePill');
+
+  const confetti = document.getElementById('confetti');
+
+  // Settings modal
+  const openSettingsBtn = document.getElementById('openSettingsBtn');
+  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+  const settingsOverlay = document.getElementById('settingsOverlay');
+
+  // Admin modal
+  const adminBtn = document.getElementById('adminBtn');
+  const adminOverlay = document.getElementById('adminOverlay');
+  const closeAdminBtn = document.getElementById('closeAdminBtn');
+  const adminBody = document.getElementById('adminBody');
+
+  // Panels
+  const panels = {
+    panel_leaderboard: document.getElementById('panel_leaderboard'),
+    panel_badges: document.getElementById('panel_badges'),
+    panel_log: document.getElementById('panel_log')
+  };
+  const PANEL_STATE_KEY = 'tt_panel_collapsed_v1';
+
+  // ---------- STATE ----------
+  let running = false;
+  let timer = null;
+  let endAt = 0;
+
+  let a = 0, b = 0, correctAns = 0;
+
+  let total = 0;
+  let correct = 0;
+  let streak = 0;
+
+  let wrongTriesThisQ = 0;
+
+  const mistakeWeights = new Map();
+
+  // ---------- 🎤 SPEECH RECOGNITION ----------
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const speechSupported = !!SpeechRecognition;
+  let recognizer = null;
+  let listening = false;
+
+  // small cooldown prevents "aborted" on rapid restarts
+  let micCooldownUntil = 0;
+
+  // when true, we’ll auto-restart listening after onend
+  let autoListenArmed = false;
+  let pendingRestart = false; // ✅ restart listening after current recognition ends
+
+
+  function initSpeech(){
+    if(!speechSupported){
+      micBtn.disabled = true;
+      micBtn.title = "Speech recognition not supported in this browser.";
+      micLabel.textContent = "🎤";
+      return;
+    }
+
+    recognizer = new SpeechRecognition();
+    recognizer.lang = 'en-AU';
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 3;
+    recognizer.continuous = false; // Web Speech ends after a result
+    recognizer.onstart = () => {
+      listening = true;
+      micBtn.classList.add('listening');
+      micBtn.title = "Listening… speak the answer";
+      micLabel.textContent = "Listening";
+    };
+
+ recognizer.onend = () => {
+  listening = false;
+  micBtn.classList.remove('listening');
+  micLabel.textContent = "🎤";
+  micBtn.title = "Speak the answer";
+
+  // ✅ Restart AFTER end (this is the key)
+  if(running && shouldAutoListen() && (autoListenArmed || pendingRestart)){
+    pendingRestart = false;
+    scheduleAutoListen(220);
+  } else {
+    pendingRestart = false;
+  }
+};
+
+
+    recognizer.onerror = (e) => {
+      if(e && e.error){
+        if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+          setToast('Mic permission blocked. Allow microphone to use voice answers.', 'warn');
+          // if permission blocked, stop auto loop
+          autoListenArmed = false;
+        } else if(e.error === 'no-speech'){
+          // In auto mode, this can happen a lot; keep it gentle
+          if(shouldAutoListen()){
+            setToast('Didn’t catch that — try again.', 'warn');
+            // keep auto listening loop going
+          } else {
+            setToast('Didn’t catch that — tap 🎤 and try again.', 'warn');
+          }
+        } else if(e.error === 'aborted'){
+          // usually harmless; avoid spamming
+        }
+      }
+    };
+
+   recognizer.onresult = (e) => {
+  if(!running) return;
+
+  // ✅ If auto listen is on, arm a restart after this recognition ends
+  pendingRestart = shouldAutoListen();
+
+  const transcript = pickBestTranscript(e);
+  const n = parseSpokenNumber(transcript);
+
+  if(n == null){
+    setToast(`Heard: “${escapeHtml(transcript)}” — please say a number.`, 'warn');
+    triggerWrongFeedback();
+    return;
+  }
+
+  answer.value = String(n);
+  submit();
+};
+
+  }
+
+  function shouldAutoListen(){
+    return !!speechSupported && !!recognizer && !!autoListenChk && autoListenChk.checked;
+  }
+
+  function scheduleAutoListen(ms=120){
+    const now = Date.now();
+    // Respect cooldown
+    const wait = Math.max(ms, micCooldownUntil - now);
+    window.clearTimeout(scheduleAutoListen._t);
+    scheduleAutoListen._t = window.setTimeout(() => {
+      if(!running) return;
+      if(!shouldAutoListen()) return;
+      if(listening) return;
+      startListening(true);
+    }, wait);
+  }
+
+  function pickBestTranscript(e){
+    try{
+      const res = e.results?.[0];
+      if(!res) return '';
+      let best = res[0];
+      for(let i=1;i<res.length;i++){
+        if((res[i].confidence ?? 0) > (best.confidence ?? 0)) best = res[i];
+      }
+      return String(best.transcript || '').trim();
+    } catch {
+      return '';
+    }
+  }
+
+  // Parse speech like: "forty two", "fourteen", "one hundred", "4 2", "42"
+  function parseSpokenNumber(text){
+    const raw = String(text || '').toLowerCase().trim();
+    if(!raw) return null;
+
+    // 1) direct digits anywhere (handles "the answer is 42")
+    const m = raw.match(/-?\d+/);
+    if(m) return Number(m[0]);
+
+    // 2) cleanup
+    let s = raw
+      .replace(/times|x|multiplied by|equals|equal|is|answer|the|a|an|please/gi, ' ')
+      .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if(!s) return null;
+
+    // 3) "four two" => 42
+    const parts = s.split(' ');
+    const digitWords = {
+      'zero':0,'oh':0,'o':0,'one':1,'two':2,'to':2,'too':2,'three':3,'four':4,'for':4,'five':5,'six':6,'seven':7,'eight':8,'ate':8,'nine':9
+    };
+    const allDigits = parts.every(p => p in digitWords);
+    if(allDigits && parts.length >= 2){
+      const num = Number(parts.map(p => digitWords[p]).join(''));
+      return Number.isFinite(num) ? num : null;
+    }
+
+    // 4) word-number parsing up to 999
+    const small = {
+      'zero':0,'oh':0,'one':1,'two':2,'to':2,'too':2,'three':3,'four':4,'for':4,'five':5,'six':6,'seven':7,'eight':8,'ate':8,'nine':9,
+      'ten':10,'eleven':11,'twelve':12,'thirteen':13,'fourteen':14,'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,'nineteen':19
+    };
+    const tens = {
+      'twenty':20,'thirty':30,'forty':40,'fourty':40,'fifty':50,'sixty':60,'seventy':70,'eighty':80,'ninety':90
+    };
+
+    let total = 0;
+    let current = 0;
+    let any = false;
+
+    const tokens = s
+      .replace(/and/gi,' ')
+      .replace(/-/g,' ')
+      .split(' ')
+      .filter(Boolean);
+
+    for(const t of tokens){
+      if(t in small){
+        current += small[t];
+        any = true;
+      } else if(t in tens){
+        current += tens[t];
+        any = true;
+      } else if(t === 'hundred'){
+        if(current === 0) current = 1;
+        current *= 100;
+        any = true;
+      } else if(t === 'minus' || t === 'negative'){
+        // not expected here, but keep safe
+        if(total === 0 && current === 0) current = -current;
+      } else {
+        // ignore unknown token
+      }
+    }
+    total += current;
+
+    if(!any) return null;
+    if(!Number.isFinite(total)) return null;
+    return total;
+  }
+
+  // if "fromAuto" true, don’t show “Start game first” etc.
+  function startListening(fromAuto=false){
+    if(!speechSupported || !recognizer) return;
+
+    if(!running){
+      if(!fromAuto) setToast('Start the game first, then tap 🎤.', 'warn');
+      return;
+    }
+
+    // prevent rapid restarts causing "aborted"
+    const now = Date.now();
+    if(now < micCooldownUntil) return;
+    micCooldownUntil = now + 280;
+
+    try{
+      if(listening){
+        recognizer.stop();
+        return;
+      }
+      if(!fromAuto) setToast('Listening… say the answer.', 'ok');
+
+      // arm auto loop only if setting enabled
+      autoListenArmed = shouldAutoListen();
+
+      recognizer.start();
+    } catch {
+      // some browsers throw if start called too fast
+    }
+  }
+
+  function stopListening(){
+    autoListenArmed = false;
+    if(!recognizer) return;
+    try { recognizer.stop(); } catch {}
+  }
+
+  // ---------- USERS ----------
+  const USERS_KEY = 'tt_users';
+
+  function normalizeName(name){
+    return String(name || '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/[^\p{L}\p{N}\s.'-]/gu, '');
+  }
+
+  function getUsers() {
+    const saved = localStorage.getItem(USERS_KEY);
+    if (saved) { try { return JSON.parse(saved); } catch {} }
+    const defaults = ['Jolene', 'Joelle', 'Jonnevie', 'Joseph'];
+    localStorage.setItem(USERS_KEY, JSON.stringify(defaults));
+    return defaults;
+  }
+
+  function setUsers(users){
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+
+  function setToast(msg, kind=''){
+    toast.innerHTML = msg ? msg : '';
+    toast.style.color =
+      kind === 'ok' ? 'var(--good)' :
+      kind === 'no' ? 'var(--bad)' :
+      kind === 'warn' ? 'var(--warn)' : 'var(--muted)';
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  function addPlayer(name){
+    const cleaned = normalizeName(name);
+    if(!cleaned){ setToast('Enter a player name.', 'warn'); return false; }
+    const users = getUsers();
+    if(users.some(u => u.toLowerCase() === cleaned.toLowerCase())){
+      setToast('That player already exists.', 'warn');
+      return false;
+    }
+    users.push(cleaned);
+    users.sort((x,y) => x.localeCompare(y));
+    setUsers(users);
+    populatePlayers();
+    playerSel.value = cleaned;
+    setToast(`Added player: <b>${escapeHtml(cleaned)}</b> ✅`, 'ok');
+    refreshPanels();
+    return true;
+  }
+  window.ttAddPlayer = addPlayer;
+
+  function populatePlayers() {
+    const users = getUsers();
+    playerSel.innerHTML = '';
+    users.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      playerSel.appendChild(opt);
+    });
+    if(!users.includes(playerSel.value)) playerSel.value = users[0] || '';
+  }
+
+  // ---------- MODE/BEST STORAGE ----------
+  const bestKeyFor = (playerName) => {
+    const dur = durationSel.value;
+    const tables = selectedTables().join(',');
+    const adaptive = adaptiveChk.checked ? 'A' : 'N';
+    const zero = includeZeroChk.checked ? 'Z' : 'N';
+    return `tt_best::${playerName}::${dur}::${tables}::${adaptive}::${zero}`;
+  };
+  const bestKey = () => bestKeyFor(playerSel.value);
+
+  function getBest(){
+    const v = localStorage.getItem(bestKey());
+    return v ? Number(v) : null;
+  }
+  function setBest(val){
+    localStorage.setItem(bestKey(), String(val));
+  }
+  function updateBestPill(){
+    const b = getBest();
+    bestPill.textContent = `Best: ${b == null ? '—' : b}`;
+  }
+
+  function modeLabel(){
+    const dur = durationSel.value;
+    const t = selectedTables();
+    const tables = (t.length ? t.join('×, ') + '×' : '—');
+    const a = adaptiveChk.checked ? 'Adaptive' : 'Normal';
+    const z = includeZeroChk.checked ? '0–12' : '1–12';
+    return `${dur}s • ${tables} • ${a} • ${z}`;
+  }
+  function renderTopMode(){
+    modePlayerTop.textContent = playerSel.value || '—';
+    modeTextTop.textContent = modeLabel();
+  }
+
+  // ---------- PROGRESS + BADGES ----------
+  const progressKey = (playerName) => `tt_progress::${playerName}`;
+  const badgesKey = (playerName) => `tt_badges::${playerName}`;
+
+  function loadProgress(playerName){
+    const raw = localStorage.getItem(progressKey(playerName));
+    if(!raw) return {};
+    try { return JSON.parse(raw); } catch { return {}; }
+  }
+  function saveProgress(playerName, obj){
+    localStorage.setItem(progressKey(playerName), JSON.stringify(obj));
+  }
+  function loadBadges(playerName){
+    const raw = localStorage.getItem(badgesKey(playerName));
+    if(!raw) return [];
+    try { return JSON.parse(raw); } catch { return []; }
+  }
+  function saveBadges(playerName, arr){
+    localStorage.setItem(badgesKey(playerName), JSON.stringify(arr));
+  }
+  function awardBadge(playerName, id){
+    const b = loadBadges(playerName);
+    if(b.includes(id)) return false;
+    b.push(id);
+    saveBadges(playerName, b);
+    return true;
+  }
+
+  function requiredBs(){
+    const minB = includeZeroChk.checked ? 0 : 1;
+    const out = [];
+    for(let i=minB;i<=12;i++) out.push(i);
+    return out;
+  }
+
+  function checkAndAwardMastery(playerName, tableA){
+    const prog = loadProgress(playerName);
+    const set = new Set((prog[String(tableA)] || []));
+    const req = requiredBs();
+    const ok = req.every(v => set.has(v));
+    if(ok){
+      const badgeId = `master_${tableA}_${includeZeroChk.checked ? 'z' : 'n'}`;
+      const newly = awardBadge(playerName, badgeId);
+      if(newly) setToast(`🌟 Badge earned: <b>Mastered ${tableA}×</b>!`, 'ok');
+      return newly;
+    }
+    return false;
+  }
+
+  // ---------- LEADERBOARD ----------
+  function currentLeaderForMode(){
+    const users = getUsers();
+    let leader = null;
+    users.forEach(name => {
+      const v = localStorage.getItem(bestKeyFor(name));
+      const score = v ? Number(v) : null;
+      if(score == null) return;
+      if(!leader || score > leader.score) leader = {name, score};
+      else if(leader && score === leader.score && name.localeCompare(leader.name) < 0) leader = {name, score};
+    });
+    return leader;
+  }
+
+  function renderLeaderboard(){
+    leaderModeText.textContent = modeLabel();
+
+    const users = getUsers();
+    const rows = users
+      .map(name => {
+        const v = localStorage.getItem(bestKeyFor(name));
+        return { name, score: v ? Number(v) : null };
+      })
+      .sort((a,b) => (b.score ?? -1) - (a.score ?? -1) || a.name.localeCompare(b.name));
+
+    leaderboardEl.innerHTML = '';
+
+    const leader = currentLeaderForMode();
+    leaderTopPill.textContent = leader ? `🏆 ${leader.name}: ${leader.score}` : '—';
+
+    if(rows.every(r => r.score == null)){
+      const empty = document.createElement('div');
+      empty.className = 'logItem';
+      empty.style.opacity = .85;
+      empty.innerHTML = `<span>No scores yet — press Start 🚀</span><span class="small">—</span>`;
+      leaderboardEl.appendChild(empty);
+      return;
+    }
+
+    rows.forEach((r, idx) => {
+      const div = document.createElement('div');
+      div.className = 'logItem';
+      const medal = idx === 0 && r.score != null ? '🏆 ' : (idx === 1 && r.score != null ? '🥈 ' : (idx === 2 && r.score != null ? '🥉 ' : ''));
+      const scoreText = r.score == null ? '—' : String(r.score);
+      const isMe = r.name === playerSel.value;
+
+      div.style.borderColor = isMe ? 'rgba(142,240,255,.45)' : 'rgba(255,255,255,.10)';
+      div.style.background = isMe ? 'rgba(142,240,255,.08)' : 'rgba(0,0,0,.16)';
+      div.innerHTML = `<span>${medal}${r.name}</span><span class="${r.score == null ? 'small' : 'ok'}">${scoreText}</span>`;
+      leaderboardEl.appendChild(div);
+    });
+  }
+
+  // ---------- BADGES ----------
+  function badgeMetaFor(playerName){
+    const earned = new Set(loadBadges(playerName));
+    const masteryModeSuffix = includeZeroChk.checked ? 'z' : 'n';
+
+    const out = [];
+    const leader = currentLeaderForMode();
+    const isLeader = leader && leader.name === playerName;
+
+    out.push({
+      id: 'temp_fastest_mode',
+      label: '🏆 Fastest (this mode)',
+      desc: 'You are #1 on the leaderboard for these exact settings.',
+      type: 'temp',
+      active: !!isLeader,
+    });
+
+    [
+      {id:'streak_5',  label:'🔥 Streak 5',  desc:'Get 5 correct in a row.'},
+      {id:'streak_10', label:'🔥 Streak 10', desc:'Get 10 correct in a row.'},
+      {id:'streak_15', label:'🔥 Streak 15', desc:'Get 15 correct in a row.'},
+    ].forEach(b => out.push({ ...b, type:'earned', active: earned.has(b.id) }));
+
+    for(let t=2; t<=12; t++){
+      const id = `master_${t}_${masteryModeSuffix}`;
+      out.push({
+        id,
+        label: `⭐ Mastered ${t}×`,
+        desc: `Answer every ${t}× fact (${includeZeroChk.checked ? '0–12' : '1–12'}) correctly at least once (across sessions).`,
+        type:'earned',
+        active: earned.has(id),
+      });
+    }
+
+    [
+      {id:'score_20', label:'⚡ 20 Club', desc:'Get 20 correct in a single round.'},
+      {id:'score_40', label:'🚀 40 Club', desc:'Get 40 correct in a single round.'},
+      {id:'score_60', label:'👑 60 Club', desc:'Get 60 correct in a single round.'},
+    ].forEach(b => out.push({ ...b, type:'earned', active: earned.has(b.id) }));
+
+    return out;
+  }
+
+  function renderBadges(){
+    const player = playerSel.value;
+    badgePlayerName.textContent = player;
+    badgeModeText.textContent = includeZeroChk.checked ? '0–12 mastery' : '1–12 mastery';
+
+    const metas = badgeMetaFor(player);
+    const earnedCount = metas.filter(m => m.type==='earned' && m.active).length;
+    const tempOn = metas.filter(m => m.type==='temp' && m.active).length;
+    badgePill.textContent = `${earnedCount} earned${tempOn ? ` • ${tempOn} active` : ''}`;
+
+    badgesEl.innerHTML = '';
+    metas.forEach(m => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'badge ' + (m.type==='temp' ? 'temp' : 'earned') + (m.active ? ' earned' : '');
+      el.style.opacity = m.active ? '1' : '0.42';
+      el.setAttribute('data-tip', m.desc);
+      el.innerHTML = `<span>${m.label}</span><span class="t">${m.active ? '✓' : '—'}</span>`;
+      badgesEl.appendChild(el);
+    });
+  }
+
+  // ---------- UI HELPERS ----------
+  function fmtTime(ms){
+    const s = Math.max(0, Math.ceil(ms/1000));
+    return `${s}s`;
+  }
+  function updateStats(){
+    correctEl.textContent = String(correct);
+    streakEl.textContent = String(streak);
+    roundScorePill.textContent = `Score: ${correct}`;
+    accuracyEl.textContent = total === 0 ? '—' : `${Math.round((correct/total)*100)}%`;
+  }
+
+  function setStartButtonUI(){
+    if(running){
+      startBtn.classList.remove('sparkle','pulse');
+      startBtn.classList.add('stop');
+      startBtn.innerHTML = '<span>STOP</span>';
+    } else {
+      startBtn.classList.remove('stop');
+      startBtn.classList.add('sparkle','pulse');
+      startBtn.innerHTML = '<span>START</span>';
+    }
+  }
+
+  function setMicUI(){
+    // mic usable during gameplay + supported browser
+    micBtn.disabled = !speechSupported || !running;
+
+    // When auto-listen is on, visually de-emphasize the mic button (still usable)
+    if(running && shouldAutoListen()){
+      micBtn.title = "Auto listen is ON (hands-free). Tap to toggle listening.";
+    } else {
+      micBtn.title = "Speak the answer";
+    }
+
+    if(!running){
+      micBtn.classList.remove('listening');
+      micLabel.textContent = '🎤';
+    }
+  }
+
+  function setRunningUI(on){
+    running = on;
+
+    // show/hide answer input (only during gameplay)
+    answer.style.display = on ? 'inline-block' : 'none';
+    answer.disabled = !on;
+
+    if(on){
+      answer.value = '';
+      answer.focus();
+      modePill.textContent = '🟢 Go!';
+    } else {
+      modePill.textContent = '🏁 Ready';
+      qText.innerHTML = `<span class="x">Press</span> Start`;
+      timeLeftEl.textContent = '—';
+      answer.value = '';
+      answer.blur();
+    }
+
+    setStartButtonUI();
+    setMicUI();
+  }
+
+  function addLogItem(text, ok){
+    const div = document.createElement('div');
+    div.className = 'logItem';
+    div.innerHTML = `<span>${text}</span><span class="${ok?'ok':'no'}">${ok?'✓':'✗'}</span>`;
+    log.prepend(div);
+    while(log.children.length > 18) log.removeChild(log.lastChild);
+  }
+
+  function triggerWrongFeedback(){
+    gameArea.classList.remove('shake');
+    flash.classList.remove('on');
+    void gameArea.offsetWidth;
+    gameArea.classList.add('shake');
+    flash.classList.add('on');
+  }
+
+  // ---------- TABLES PICKER ----------
+  function enforceAtLeastOneTableChecked(changedCb){
+    const checked = [];
+    for(let t=2; t<=12; t++){
+      const cb = document.getElementById(`t${t}`);
+      if(cb && cb.checked) checked.push(cb);
+    }
+    if(checked.length === 0 && changedCb){
+      changedCb.checked = true;
+      setToast("You must keep at least one table selected.", 'warn');
+    }
+  }
+
+  function buildTablesPicker(){
+    tablesGrid.innerHTML = '';
+    for(let t=2; t<=12; t++){
+      const id = `t${t}`;
+      const wrap = document.createElement('label');
+      wrap.className = 'toggle';
+      wrap.style.justifyContent = 'space-between';
+      wrap.style.cursor = 'pointer';
+      const defaultChecked = (t===2 || t===3 || t===6 || t===7);
+      wrap.innerHTML = `
+        <span style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="${id}" ${defaultChecked ? 'checked' : ''}>
+          <b>${t}×</b>
+        </span>
+        <span class="small">table</span>
+      `;
+      tablesGrid.appendChild(wrap);
+
+      const cb = wrap.querySelector(`#${id}`);
+      cb.addEventListener('change', (e) => {
+        enforceAtLeastOneTableChecked(e.target);
+        refreshPanels();
+        renderAdminUI();
+      });
+    }
+  }
+
+  function selectedTables(){
+    const out = [];
+    for(let t=2; t<=12; t++){
+      const cb = document.getElementById(`t${t}`);
+      if(cb && cb.checked) out.push(t);
+    }
+    return out.length ? out : [2];
+  }
+
+  // ---------- QUESTION GEN ----------
+  function keyFor(a,b){ return `${a}x${b}`; }
+  function randInt(min, maxInclusive){
+    return Math.floor(Math.random()*(maxInclusive-min+1))+min;
+  }
+  function weightedPick(items, weightFn){
+    let sum = 0;
+    const weights = items.map(it => {
+      const w = Math.max(0.01, weightFn(it));
+      sum += w;
+      return w;
+    });
+    let r = Math.random()*sum;
+    for(let i=0;i<items.length;i++){
+      r -= weights[i];
+      if(r <= 0) return items[i];
+    }
+    return items[items.length-1];
+  }
+
+  function makeQuestion(){
+    const tables = selectedTables();
+    const minB = includeZeroChk.checked ? 0 : 1;
+    const maxB = 12;
+
+    const candidates = [];
+    for(const ta of tables){
+      for(let tb=minB; tb<=maxB; tb++){
+        candidates.push([ta, tb]);
+      }
+    }
+
+    const pick = adaptiveChk.checked
+      ? weightedPick(candidates, ([ta,tb]) => 1 + (mistakeWeights.get(keyFor(ta,tb)) || 0))
+      : candidates[randInt(0, candidates.length-1)];
+
+    [a,b] = pick;
+    correctAns = a*b;
+
+    wrongTriesThisQ = 0;
+
+    qText.innerHTML = `${a} <span class="x">×</span> ${b} <span class="x">=</span>`;
+    answer.value = '';
+    answer.placeholder = '?';
+    answer.focus();
+
+    // ✅ If auto listen is on, listen for the next answer automatically
+    if(shouldAutoListen()){
+      autoListenArmed = true;
+      scheduleAutoListen(160);
+    }
+  }
+
+  function bumpMistakeWeight(ta,tb){
+    const k = keyFor(ta,tb);
+    const cur = mistakeWeights.get(k) || 0;
+    mistakeWeights.set(k, Math.min(8, cur + 1));
+  }
+  function reduceMistakeWeight(ta,tb){
+    const k = keyFor(ta,tb);
+    const cur = mistakeWeights.get(k) || 0;
+    if(cur <= 0) return;
+    mistakeWeights.set(k, Math.max(0, cur - 0.35));
+  }
+
+  // ---------- CONFETTI ----------
+  function popConfetti(intensity='big'){
+    confetti.innerHTML = '';
+    const n = intensity === 'tiny' ? 14 : (intensity === 'small' ? 28 : 70);
+    for(let i=0;i<n;i++){
+      const el = document.createElement('i');
+      const left = Math.random()*100;
+      const delay = Math.random()*0.12;
+      const dur = (intensity === 'tiny' ? 0.7 : 0.95) + Math.random()*0.6;
+      const size = (intensity === 'tiny' ? 6 : 7) + Math.random()*(intensity === 'tiny' ? 6 : 10);
+
+      el.style.left = left + 'vw';
+      el.style.top = (-10 - Math.random()*20) + 'vh';
+      el.style.animationDuration = dur + 's';
+      el.style.animationDelay = delay + 's';
+      el.style.width = (size*0.6) + 'px';
+      el.style.height = size + 'px';
+      el.style.background = `hsl(${Math.floor(Math.random()*360)}, 90%, 70%)`;
+
+      confetti.appendChild(el);
+      setTimeout(() => el.remove(), (dur+delay)*1000 + 250);
+    }
+  }
+
+  // ---------- PANELS: COLLAPSE ----------
+  function loadPanelState(){
+    const raw = localStorage.getItem(PANEL_STATE_KEY);
+    if(!raw) return {};
+    try { return JSON.parse(raw); } catch { return {}; }
+  }
+  function savePanelState(state){
+    localStorage.setItem(PANEL_STATE_KEY, JSON.stringify(state));
+  }
+  function setPanelCollapsed(panelId, collapsed){
+    const p = panels[panelId];
+    if(!p) return;
+    p.classList.toggle('collapsed', collapsed);
+    const state = loadPanelState();
+    state[panelId] = collapsed;
+    savePanelState(state);
+  }
+  function initPanels(){
+    const state = loadPanelState();
+    Object.keys(panels).forEach(id => setPanelCollapsed(id, !!state[id]));
+    document.querySelectorAll('.panelHeader[data-toggle]').forEach(h => {
+      h.addEventListener('click', () => {
+        const id = h.getAttribute('data-toggle');
+        const p = panels[id];
+        const now = p.classList.contains('collapsed');
+        setPanelCollapsed(id, !now);
+      });
+    });
+  }
+
+  // ---------- SETTINGS MODAL ----------
+  function openSettings(){
+    stopListening();
+    settingsOverlay.classList.add('open');
+    document.body.classList.add('modalOpen');
+    setTimeout(() => playerSel.focus(), 0);
+  }
+  function closeSettings(){
+    settingsOverlay.classList.remove('open');
+    if(!adminOverlay.classList.contains('open')) document.body.classList.remove('modalOpen');
+    openSettingsBtn.focus();
+  }
+  openSettingsBtn.addEventListener('click', openSettings);
+  closeSettingsBtn.addEventListener('click', closeSettings);
+  settingsOverlay.addEventListener('click', (e) => {
+    if(e.target === settingsOverlay) closeSettings();
+  });
+
+  // ---------- ADMIN MODAL ----------
+  function openAdmin(){
+    stopListening();
+    adminOverlay.classList.add('open');
+    document.body.classList.add('modalOpen');
+    renderAdminUI();
+  }
+  function closeAdmin(){
+    adminOverlay.classList.remove('open');
+    if(!settingsOverlay.classList.contains('open')) document.body.classList.remove('modalOpen');
+    adminBtn.focus();
+  }
+  adminBtn.addEventListener('click', openAdmin);
+  closeAdminBtn.addEventListener('click', closeAdmin);
+  adminOverlay.addEventListener('click', (e) => {
+    if(e.target === adminOverlay) closeAdmin();
+  });
+
+  function eraseAllAppData(){
+    const ok = confirm(
+      "Erase ALL data for this app on this device?\n\n" +
+      "This will remove:\n" +
+      "• players list\n" +
+      "• best scores\n" +
+      "• badges + mastery progress\n" +
+      "• panel collapse state\n\n" +
+      "This cannot be undone."
+    );
+    if(!ok) return;
+
+    const PREFIXES = ['tt_best::','tt_progress::','tt_badges::'];
+    const EXACT = [USERS_KEY, PANEL_STATE_KEY];
+
+    for(let i = localStorage.length - 1; i >= 0; i--){
+      const k = localStorage.key(i);
+      if(!k) continue;
+      if(EXACT.includes(k) || PREFIXES.some(p => k.startsWith(p))){
+        localStorage.removeItem(k);
+      }
+    }
+
+    stopListening();
+
+    running = false;
+    if(timer) clearInterval(timer);
+    timer = null;
+
+    total = 0; correct = 0; streak = 0;
+    wrongTriesThisQ = 0;
+    mistakeWeights.clear();
+    log.innerHTML = '';
+    setToast('All app data erased.', 'warn');
+
+    buildTablesPicker();
+    populatePlayers();
+    updateStats();
+    setRunningUI(false);
+    initPanels();
+    refreshPanels();
+    renderAdminUI();
+  }
+
+  function renderAdminUI(){
+    const users = getUsers();
+    const userOptions = users.map(u => `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
+    const currentMode = modeLabel();
+
+    adminBody.innerHTML = `
+      <div style="display:grid;gap:14px">
+        <div class="footerNote">
+          <b>Admin tools</b> • Mode: <span style="color:var(--text)">${escapeHtml(currentMode)}</span>
+        </div>
+
+        <div class="grid3">
+          <div>
+            <label>Target player</label>
+            <select class="field" id="adminTargetPlayer">${userOptions}</select>
+          </div>
+
+          <div>
+            <label>Set BEST score (this mode)</label>
+            <input class="field" id="adminBestScore" type="number" min="0" step="1" placeholder="e.g., 42"/>
+          </div>
+
+          <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
+            <button class="btn" id="adminApplyBest"><span>Apply</span></button>
+            <button class="btn" id="adminClearBest" style="background: rgba(255,255,255,.07); color: var(--text); border: 1px solid rgba(255,255,255,.12); box-shadow:none; font-weight:650;"><span>Clear</span></button>
+          </div>
+        </div>
+        <hr class="hr" />
+
+        <div class="grid2">
+          <div>
+            <label>Reset progress/badges (target player)</label>
+            <div class="footerNote">Clears mastery progress and earned badges for that player (across all modes).</div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn stop" id="adminResetPlayer"><span>Reset player data</span></button>
+          </div>
+        </div>
+        <hr class="hr" />
+
+        <div class="grid2">
+          <div>
+            <label>Quick actions</label>
+            <div class="footerNote">These actions affect data for this device/browser.</div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn" id="adminResetBestBtn" style="background: rgba(255,255,255,.07); color: var(--text); border: 1px solid rgba(255,255,255,.12); box-shadow:none; font-weight:650;"><span>Reset best (this mode)</span></button>
+            <button class="btn stop" id="adminEraseAllBtn"><span>Erase all data</span></button>
+          </div>
+        </div>
+
+        <hr class="hr" />
+
+        <div class="grid2">
+          <div>
+            <label>Add a player</label>
+            <input class="field" id="adminAddPlayerName" type="text" placeholder="e.g., Grandma, Dad, Friend" />
+            <div class="footerNote">Adds a new player to the dropdown (saved on this device).</div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn" id="adminAddPlayerBtn"><span>Add player</span></button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const targetSel = adminBody.querySelector('#adminTargetPlayer');
+    targetSel.value = playerSel.value;
+
+    // Add player
+    const addName = adminBody.querySelector('#adminAddPlayerName');
+    const addBtn = adminBody.querySelector('#adminAddPlayerBtn');
+    addBtn.addEventListener('click', () => {
+      const ok = addPlayer(addName.value);
+      if(ok) addName.value = '';
+      renderAdminUI();
+    });
+    addName.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') addBtn.click();
+    });
+
+    // Best override
+    const bestInput = adminBody.querySelector('#adminBestScore');
+    const applyBest = adminBody.querySelector('#adminApplyBest');
+    const clearBest = adminBody.querySelector('#adminClearBest');
+
+    applyBest.addEventListener('click', () => {
+      const who = targetSel.value;
+      const v = Number(bestInput.value);
+      if(!Number.isFinite(v) || v < 0){
+        setToast('Enter a valid best score (0 or higher).', 'warn');
+        return;
+      }
+      localStorage.setItem(bestKeyFor(who), String(Math.floor(v)));
+      setToast(`Best score overridden for ${who} ✅`, 'ok');
+      refreshPanels();
+      renderAdminUI();
+    });
+
+    clearBest.addEventListener('click', () => {
+      const who = targetSel.value;
+      localStorage.removeItem(bestKeyFor(who));
+      setToast(`Best score cleared for ${who}.`, 'warn');
+      refreshPanels();
+      renderAdminUI();
+    });
+
+    // Reset best / erase all
+    const resetBestBtn = adminBody.querySelector('#adminResetBestBtn');
+    const eraseAllBtn = adminBody.querySelector('#adminEraseAllBtn');
+
+    resetBestBtn.addEventListener('click', () => {
+      localStorage.removeItem(bestKey());
+      setToast('Best score reset for this mode.', 'warn');
+      refreshPanels();
+      renderAdminUI();
+    });
+
+    eraseAllBtn.addEventListener('click', eraseAllAppData);
+
+    // Reset player progress/badges
+    const resetPlayerBtn = adminBody.querySelector('#adminResetPlayer');
+    resetPlayerBtn.addEventListener('click', () => {
+      const who = targetSel.value;
+      const ok = confirm(`Reset all badges + mastery progress for ${who}? This cannot be undone.`);
+      if(!ok) return;
+      localStorage.removeItem(progressKey(who));
+      localStorage.removeItem(badgesKey(who));
+      setToast(`Reset badges/progress for ${who}.`, 'warn');
+      refreshPanels();
+      renderAdminUI();
+    });
+  }
+
+  // ---------- GAME LOOP ----------
+  function startRound(){
+    const tables = selectedTables();
+    if(!tables.length) return;
+
+    total = 0; correct = 0; streak = 0;
+    wrongTriesThisQ = 0;
+    mistakeWeights.clear();
+    log.innerHTML = '';
+    setToast('');
+
+    const dur = Number(durationSel.value) * 1000;
+    endAt = Date.now() + dur;
+
+    setRunningUI(true);
+    refreshPanels();
+    makeQuestion();
+    tick();
+    timer = setInterval(tick, 120);
+
+    // ✅ Start auto listen right away if enabled
+    if(shouldAutoListen()){
+  autoListenArmed = true;
+  pendingRestart = true;
+  scheduleAutoListen(250);
+}
+
+  }
+
+  function stopRound(manual=false){
+    stopListening();
+
+    if(timer) clearInterval(timer);
+    timer = null;
+
+    const best = getBest();
+    const isNewBest = best == null || correct > best;
+
+    if(running){
+      const p = playerSel.value;
+
+      if(correct >= 20) awardBadge(p, 'score_20');
+      if(correct >= 40) awardBadge(p, 'score_40');
+      if(correct >= 60) awardBadge(p, 'score_60');
+
+      if(isNewBest){
+        setBest(correct);
+        popConfetti('big');
+        setToast(`New best for ${p}! 🎉 <b>${correct}</b> correct.`, 'ok');
+      } else {
+        setToast(manual ? `Stopped. Score: <b>${correct}</b>.` : `Time! Score: <b>${correct}</b>.`);
+      }
+    }
+
+    setRunningUI(false);
+    refreshPanels();
+  }
+
+  function tick(){
+    const left = endAt - Date.now();
+    timeLeftEl.textContent = fmtTime(left);
+    if(left <= 0){
+      timeLeftEl.textContent = '0s';
+      stopRound(false);
+    }
+  }
+
+  function recordProgressAndBadgesForCorrect(ta, tb){
+    const player = playerSel.value;
+    const prog = loadProgress(player);
+
+    const key = String(ta);
+    const arr = Array.isArray(prog[key]) ? prog[key] : [];
+    const set = new Set(arr);
+    set.add(tb);
+    prog[key] = Array.from(set).sort((x,y)=>x-y);
+    saveProgress(player, prog);
+
+    checkAndAwardMastery(player, ta);
+
+    if(streak === 5)  awardBadge(player, 'streak_5');
+    if(streak === 10) awardBadge(player, 'streak_10');
+    if(streak === 15) awardBadge(player, 'streak_15');
+  }
+
+  // ---------- Submit on Enter only ----------
+  function submit(){
+    if(!running) return;
+
+    total++;
+    const raw = answer.value.trim();
+    const val = Number(raw);
+    const ok = (raw !== '' && Number.isFinite(val) && val === correctAns);
+
+    if(ok){
+      correct++;
+      streak++;
+      reduceMistakeWeight(a,b);
+      addLogItem(`${a}×${b}=${correctAns}`, true);
+
+      popConfetti('tiny');
+      recordProgressAndBadgesForCorrect(a, b);
+
+      setToast(streak >= 5 ? `🔥 Streak: <b>${streak}</b>!` : '', 'ok');
+
+      makeQuestion(); // move on (auto listen re-starts inside makeQuestion)
+    } else {
+      streak = 0;
+      bumpMistakeWeight(a,b);
+      wrongTriesThisQ++;
+
+      triggerWrongFeedback();
+
+      const shown = (raw === '' ? 'blank' : escapeHtml(raw));
+      addLogItem(`${a}×${b}=${correctAns} (you: ${shown})`, false);
+
+      if(wrongTriesThisQ >= 2){
+        setToast(`Try typing the correct answer: <b>${correctAns}</b>`, 'warn');
+        answer.value = String(correctAns);
+        answer.select();
+      } else {
+        setToast(`Oops — try again.`, 'no');
+        answer.value = '';
+      }
+
+      answer.focus();
+
+      // If auto listen is on, keep listening loop alive even after mistakes
+      if(shouldAutoListen()){
+        autoListenArmed = true;
+        scheduleAutoListen(220);
+      }
+    }
+
+    updateStats();
+    refreshPanels();
+  }
+
+  // ---------- PANELS ----------
+  function refreshPanels(){
+    renderTopMode();
+    updateBestPill();
+    renderLeaderboard();
+    renderBadges();
+    setMicUI();
+    if(adminOverlay.classList.contains('open')) renderAdminUI();
+  }
+
+  // ---------- EVENTS ----------
+  // Start/Stop toggle
+  startBtn.addEventListener('click', () => {
+    if(running) stopRound(true);
+    else startRound();
+  });
+
+  // 🎤 manual click still works (and acts as toggle)
+micBtn.addEventListener('click', () => {
+  autoListenArmed = shouldAutoListen();
+  pendingRestart = shouldAutoListen();
+  startListening(false);
+});
+
+  answer.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') submit();
+    if(e.key === 'Escape' && running) stopRound(true);
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape'){
+      if(adminOverlay.classList.contains('open')) closeAdmin();
+      else if(settingsOverlay.classList.contains('open')) closeSettings();
+      else if(running) stopRound(true);
+    }
+  });
+
+  [playerSel, durationSel, adaptiveChk, includeZeroChk, autoListenChk].forEach(el =>
+    el.addEventListener('change', () => {
+      // if the user turns auto listen off mid-round, stop listening immediately
+      if(running && !shouldAutoListen()) stopListening();
+      refreshPanels();
+    })
+  );
+
+  // ---------- init ----------
+  function init(){
+    buildTablesPicker();
+    populatePlayers();
+    initPanels();
+    updateStats();
+    initSpeech();       // ✅ voice support
+    setRunningUI(false);
+    refreshPanels();
+
+    if(!speechSupported){
+      setToast('Note: Voice answers need Chrome/Edge (speech recognition).', 'warn');
+    }
+  }
+  init();
+})();
+</script>
+
+</body>
+</html>
